@@ -1,0 +1,1 @@
+{% autoescape off %}{% if is_change %}Yangi email manzilni tasdiqlang{% else %}Email manzilingizni tasdiqlang{% endif %}{% endautoescape %}

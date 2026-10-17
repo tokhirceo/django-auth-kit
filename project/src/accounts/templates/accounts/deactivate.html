@@ -1,0 +1,14 @@
+{% extends "accounts/accounts_base.html" %}
+{% block title %}Hisobni faolsizlantirish{% endblock %}
+{% block page_heading %}Hisobni faolsizlantirish{% endblock %}
+{% block page_subheading %}{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-md">
+  <section class="site-surface site-border rounded-xl border p-5 sm:p-6">
+    <h1 class="site-text mb-4 text-xl font-bold">Hisobni faolsizlantirish</h1>
+    <div role="note" class="mb-4 rounded-lg border p-3 text-sm" style="border-color:var(--warning-bd);background:var(--warning-bg);color:var(--warning-fg)"><p class="font-medium">Vaqtinchalik va qaytariladigan amal.</p><ul class="mt-2 list-disc pl-5"><li>Barcha sessiyalar tugatiladi, tizimga kira olmaysiz.</li><li>Boshqalar sizni ko'rmaydi.</li><li>Ma'lumotlaringiz (email, username, profil) saqlanadi.</li><li>Istalgan payt parol bilan qayta yoqishingiz mumkin.</li></ul></div>
+    {% include "accounts/_form.html" with submit_label="Hisobni faolsizlantirish" danger=True %}
+  </section>
+  <p class="mt-4 text-sm"><a class="underline focus:outline-none focus:ring-2" style="color:var(--accent)" href="{% url 'accounts:settings' %}">&larr; Sozlamalar</a></p>
+</div>
+{% endblock %}

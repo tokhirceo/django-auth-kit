@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+{% comment %}
+  base.html — saytning asosiy shabloni.
+
+  Talablar (settings.py):
+    * TEMPLATES -> context_processors: "django.template.context_processors.request"
+    * INSTALLED_APPS: "django.contrib.messages" va messages context processor
+    * URL nomlari: home, accounts:profile, accounts:settings,
+      accounts:login, accounts:signup, accounts:logout
+    * "admin:index" faqat django.contrib.admin yoqilgan bo'lsa ishlaydi
+
+  Bloklar:
+    title, meta_description, extra_head, tailwind, body_class,
+    messages, content, footer, extra_js
+{% endcomment %}
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="{% block meta_description %}Sayt — raqamli makon{% endblock %}">
+
+  <title>{% block title %}Bosh sahifa{% endblock %} | Sayt</title>
+
+  <!-- Mavzuni sahifa chizilishidan OLDIN o'rnatish (FOUC bo'lmasligi uchun) -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var theme = "light";
+      try {
+        var saved = localStorage.getItem("site-theme");
+        if (saved === "light" || saved === "dark") {
+          theme = saved;
+        } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          theme = "dark";
+        }
+      } catch (e) {
+        if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          theme = "dark";
+        }
+      }
+      root.classList.toggle("dark", theme === "dark");
+      root.dataset.theme = theme;
+    })();
+  </script>
+
+  {% block tailwind %}
+  {# Faqat ishlab chiqish uchun. Production'da Tailwind CLI bilan kompilyatsiya qilingan CSS ulang. #}
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              50: "#eff8f2", 100: "#dcefe1", 200: "#b9dfc5", 300: "#8bc9a1",
+              400: "#5bad7b", 500: "#358e5b", 600: "#267247", 700: "#205b3b",
+              800: "#1c4932", 900: "#183c2b", 950: "#0b2117"
+            }
+          }
+        }
+      }
+    };
+  </script>
+  {% endblock %}
+
+  <style>
+    /* ================================
+       O'ZGARUVCHILAR
+    ================================= */
+    :root {
+      color-scheme: light;
+
+      --page: #f7f9f7;
+      --surface: #ffffff;
+      --surface-soft: #f1f5f2;
+      --text: #17251c;
+      --muted: #596a5e;
+      --border: #dfe7e0;
+      --accent: #267247;
+      --accent-hover: #205b3b;
+      --accent-contrast: #ffffff;
+      --hover: #eaf5ee;
+      --ring: #267247;
+
+      --danger: #b91c1c;
+      --danger-bg: #fdebea;
+
+      --success-bg: #e8f6ed; --success-fg: #14532d; --success-bd: #b7e2c4;
+      --info-bg:    #e9f1fb; --info-fg:    #1e3a8a; --info-bd:    #bcd3f2;
+      --warning-bg: #fdf4df; --warning-fg: #78350f; --warning-bd: #f0d9a0;
+      --error-bg:   #fdebea; --error-fg:   #7f1d1d; --error-bd:   #f3bcb8;
+    }
+
+    html.dark {
+      color-scheme: dark;
+
+      --page: #14251f;
+      --surface: #1b3027;
+      --surface-soft: #223a30;
+      --text: #e5f1e8;
+      --muted: #a2b8a8;
+      --border: #30483a;
+      --accent: #83d6a1;
+      --accent-hover: #a0e6b6;
+      --accent-contrast: #0b2117;
+      --hover: #223a30;
+      --ring: #83d6a1;
+
+      --danger: #fca5a5;
+      --danger-bg: #3f1f1f;
+
+      --success-bg: #17372a; --success-fg: #b6ecc9; --success-bd: #2a5a42;
+      --info-bg:    #1a2e4a; --info-fg:    #bcd6fb; --info-bd:    #2d4a73;
+      --warning-bg: #3b3115; --warning-fg: #f5dfa2; --warning-bd: #5e4f22;
+      --error-bg:   #3f1f1f; --error-fg:   #f8c4c0; --error-bd:   #6a3333;
+    }
+
+    /* ================================
+       ASOS
+    ================================= */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 88px;
+      scrollbar-gutter: stable;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font: inherit; -webkit-tap-highlight-color: transparent; }
+    [hidden] { display: none !important; }
+
+    :focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: 2px;
+    }
+
+    .skip-link {
+      position: absolute;
+      z-index: 100;
+      top: 8px;
+      left: 8px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transform: translateY(-200%);
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    /* Mos kelish uchun yordamchi sinflar (child shablonlar ishlatadi) */
+    .site-surface      { background: var(--surface); border-color: var(--border); }
+    .site-surface-soft { background: var(--surface-soft); }
+    .site-text         { color: var(--text); }
+    .site-muted        { color: var(--muted); }
+    .site-border       { border-color: var(--border); }
+    .site-accent       { color: var(--accent); }
+    .site-focus:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    /* ================================
+       HEADER
+    ================================= */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding-top: env(safe-area-inset-top, 0px);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .site-nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 20px;
+
+      max-width: 1280px;
+      min-height: 72px;
+      margin: 0 auto;
+      padding: 12px 16px;
+    }
+
+    /* Brend */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: #205b3b;
+      color: #ffffff;
+    }
+    html.dark .brand-mark { background: #358e5b; color: #0b2117; }
+    .brand-mark svg { width: 24px; height: 24px; }
+
+    .brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+    .brand-tag  { color: var(--muted); font-size: 12px; }
+
+    /* Asosiy navigatsiya */
+    .main-nav {
+      display: none;
+      order: 3;
+      width: 100%;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .main-nav.is-open { display: block; }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background-color 150ms ease, color 150ms ease;
+    }
+    .nav-link:hover { background: var(--hover); color: var(--accent); }
+    .nav-link[aria-current="page"] { background: var(--hover); color: var(--accent); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* O'ng tomon tugmalari */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      order: 2;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      cursor: pointer;
+      transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+    .btn-icon:hover { border-color: var(--accent); background: var(--hover); color: var(--accent); }
+    .btn-icon svg { width: 20px; height: 20px; }
+
+    .icon-moon { display: none; }
+    html.dark .icon-sun  { display: none; }
+    html.dark .icon-moon { display: block; }
+
+    .icon-close { display: none; }
+    [aria-expanded="true"] > .icon-open  { display: none; }
+    [aria-expanded="true"] > .icon-close { display: block; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background-color 150ms ease, color 150ms ease;
+    }
+    .btn-ghost { color: var(--muted); }
+    .btn-ghost:hover { background: var(--hover); color: var(--accent); }
+    .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    html:not(.dark) .btn-primary { background: #205b3b; }
+    html:not(.dark) .btn-primary:hover { background: #183c2b; }
+
+    .only-sm { display: none; }
+
+    /* Foydalanuvchi menyusi */
+    .user-menu { position: relative; }
+
+    .user-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 200px;
+      height: 40px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-soft);
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 150ms ease, background-color 150ms ease;
+    }
+    .user-trigger:hover { border-color: var(--accent); background: var(--hover); }
+
+    .user-avatar {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: #dcefe1;
+      color: #1c4932;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    html.dark .user-avatar { background: #1c4932; color: #dcefe1; }
+
+    .user-label { display: none; min-width: 0; text-align: left; line-height: 1.25; }
+    .user-label strong,
+    .user-label small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .user-label strong { font-size: 13px; font-weight: 600; }
+    .user-label small  { color: var(--muted); font-size: 11px; }
+
+    .user-arrow {
+      display: none;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      color: var(--muted);
+      transition: transform 150ms ease;
+    }
+    .user-trigger[aria-expanded="true"] .user-arrow { transform: rotate(180deg); }
+
+    .dropdown {
+      position: absolute;
+      z-index: 60;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 264px;
+      max-width: calc(100vw - 32px);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 0 16px 40px rgb(0 0 0 / 14%);
+    }
+
+    .dropdown-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dropdown-head p {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .dropdown-name  { font-size: 14px; font-weight: 700; }
+    .dropdown-email { margin-top: 2px !important; color: var(--muted); font-size: 12px; }
+
+    .dropdown-body { padding: 8px; }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 150ms ease;
+    }
+    .menu-item:hover { background: var(--hover); }
+    .menu-item svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--muted); }
+
+    .menu-item-danger { color: var(--danger); font-weight: 500; }
+    .menu-item-danger svg { color: currentColor; }
+    .menu-item-danger:hover { background: var(--danger-bg); }
+
+    .menu-divider { height: 1px; margin: 8px 0; background: var(--border); }
+
+    /* ================================
+       KONTENT, XABARLAR, FOOTER
+    ================================= */
+    .site-main { flex: 1 0 auto; }
+    .site-main:focus { outline: none; }
+
+    .messages {
+      display: grid;
+      gap: 10px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px 16px 0;
+    }
+
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+    .alert-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .alert-close {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      margin: -4px -6px -4px 0;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      opacity: 0.7;
+      cursor: pointer;
+    }
+    .alert-close:hover { opacity: 1; background: rgb(0 0 0 / 8%); }
+    .alert-close svg { width: 16px; height: 16px; }
+
+    .alert-success { background: var(--success-bg); color: var(--success-fg); border-color: var(--success-bd); }
+    .alert-info,
+    .alert-debug   { background: var(--info-bg);    color: var(--info-fg);    border-color: var(--info-bd); }
+    .alert-warning { background: var(--warning-bg); color: var(--warning-fg); border-color: var(--warning-bd); }
+    .alert-error   { background: var(--error-bg);   color: var(--error-fg);   border-color: var(--error-bd); }
+
+    .site-footer {
+      flex-shrink: 0;
+      padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footer-inner { max-width: 1280px; margin: 0 auto; }
+    .footer-inner p { margin: 0; }
+
+    /* ================================
+       RESPONSIV
+    ================================= */
+    @media (min-width: 640px) {
+      .site-nav { padding-right: 24px; padding-left: 24px; }
+      .messages { padding-right: 24px; padding-left: 24px; }
+      .footer-inner { padding: 0 8px; }
+      .user-trigger { padding: 4px 12px 4px 6px; gap: 12px; }
+      .user-label, .user-arrow { display: block; }
+      .only-sm { display: inline-flex; }
+      .only-mobile { display: none !important; }
+    }
+
+    @media (min-width: 768px) {
+      .main-nav {
+        display: block;
+        order: 2;
+        width: auto;
+        padding-top: 0;
+        border-top: 0;
+      }
+      .nav-list { flex-direction: row; align-items: center; }
+      .nav-actions { order: 3; margin-left: 0; }
+      .menu-toggle { display: none; }
+    }
+
+    @media (min-width: 1024px) {
+      .site-nav { padding-right: 32px; padding-left: 32px; }
+      .messages { padding-right: 32px; padding-left: 32px; }
+    }
+
+    @media (max-width: 400px) {
+      .brand-tag { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media print {
+      .site-header, .site-footer, .skip-link { display: none !important; }
+      body { background: #fff; color: #000; }
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="{% block body_class %}{% endblock %}">
+
+<a href="#main-content" class="skip-link">Asosiy kontentga o‘tish</a>
+
+{% with current=request.resolver_match.view_name %}
+
+<!-- ====== HEADER ====== -->
+<header class="site-header">
+  <nav class="site-nav" aria-label="Asosiy navigatsiya">
+
+    <!-- Brend -->
+    <a href="{% url 'home' %}" class="brand site-focus" aria-label="Sayt — bosh sahifa">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21V11"/>
+          <path d="M12 15c-5 0-8-3-8-8 5 0 8 3 8 8Z"/>
+          <path d="M12 11c0-4 3-7 8-7 0 5-3 8-8 8"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">Sayt</span>
+        <span class="brand-tag">Raqamli makon</span>
+      </span>
+    </a>
+
+    <!-- Asosiy menyu (mobilda burger orqali ochiladi) -->
+    <div id="main-navigation" class="main-nav">
+      <ul class="nav-list">
+        <li>
+          <a href="{% url 'home' %}" class="nav-link"
+             {% if current == 'home' %}aria-current="page"{% endif %}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-7h6v7"/>
+            </svg>
+            Bosh sahifa
+          </a>
+        </li>
+
+        {% if user.is_authenticated %}
+        <li>
+          <a href="{% url 'accounts:profile' %}" class="nav-link"
+             {% if current == 'accounts:profile' %}aria-current="page"{% endif %}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
+            </svg>
+            Profil
+          </a>
+        </li>
+        {% else %}
+        {# Kichik ekranlarda "Kirish" headerda sig'maydi, shuning uchun menyuda #}
+        <li class="only-mobile">
+          <a href="{% url 'accounts:login' %}" class="nav-link"
+             {% if current == 'accounts:login' %}aria-current="page"{% endif %}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 7l5 5-5 5m5-5H9"/><path d="M12 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/>
+            </svg>
+            Kirish
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <!-- O'ng tomon -->
+    <div class="nav-actions">
+
+      <button id="theme-toggle" type="button" class="btn-icon site-focus"
+              aria-pressed="false" aria-label="Qorong‘i mavzu" title="Mavzuni almashtirish">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/>
+        </svg>
+      </button>
+
+      {% if user.is_authenticated %}
+
+      <div class="user-menu" id="user-menu">
+        <button id="user-menu-button" type="button" class="user-trigger site-focus"
+                aria-expanded="false" aria-controls="user-dropdown"
+                aria-label="Hisob menyusi: {{ user.get_username }}">
+          <span class="user-avatar" aria-hidden="true">{{ user.get_username|slice:":1"|upper }}</span>
+          <span class="user-label">
+            <strong>{{ user.get_username }}</strong>
+            <small>Hisobim</small>
+          </span>
+          <svg class="user-arrow" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+
+        <div id="user-dropdown" class="dropdown" hidden>
+          <div class="dropdown-head">
+            <p class="dropdown-name">{{ user.get_username }}</p>
+            <p class="dropdown-email">{{ user.email|default:"Email ko‘rsatilmagan" }}</p>
+          </div>
+
+          <div class="dropdown-body">
+            <a href="{% url 'accounts:profile' %}" class="menu-item site-focus">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
+              </svg>
+              Profilim
+            </a>
+
+            <a href="{% url 'accounts:settings' %}" class="menu-item site-focus">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>
+              </svg>
+              Sozlamalar
+            </a>
+
+            {% if user.is_staff %}
+            <a href="{% url 'admin:index' %}" class="menu-item site-focus">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/>
+              </svg>
+              Boshqaruv paneli
+            </a>
+            {% endif %}
+
+            <div class="menu-divider" role="separator"></div>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="menu-item menu-item-danger site-focus">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/>
+                </svg>
+                Hisobdan chiqish
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+
+      <a href="{% url 'accounts:login' %}" class="btn btn-ghost only-sm site-focus">Kirish</a>
+      <a href="{% url 'accounts:signup' %}" class="btn btn-primary site-focus">Ro‘yxatdan o‘tish</a>
+
+      {% endif %}
+
+      <!-- Mobil menyu tugmasi -->
+      <button id="mobile-menu-button" type="button" class="btn-icon menu-toggle site-focus"
+              aria-expanded="false" aria-controls="main-navigation"
+              aria-label="Navigatsiya menyusini ochish">
+        <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+{% endwith %}
+
+<!-- ====== KONTENT ====== -->
+<main id="main-content" class="site-main" tabindex="-1">
+
+  {% block messages %}
+    {% if messages %}
+      <div class="messages" aria-live="polite">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.level_tag|default:'info' }}"
+               role="{% if message.level_tag == 'error' or message.level_tag == 'warning' %}alert{% else %}status{% endif %}">
+            <div class="alert-text">{{ message }}</div>
+            <button type="button" class="alert-close site-focus" data-dismiss-alert aria-label="Xabarni yopish">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endblock %}
+
+  {% block content %}{% endblock %}
+</main>
+
+{% block footer %}
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>© {% now "Y" %} Sayt. Barcha huquqlar himoyalangan.</p>
+  </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}{% endblock %}
+
+<script>
+(function () {
+  "use strict";
+
+  var root = document.documentElement;
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- MAVZU ---------- */
+  var themeButton = $("theme-toggle");
+  var themeMeta = document.querySelector('meta[name="theme-color"]');
+  var darkQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  function savedTheme() {
+    try {
+      var t = localStorage.getItem("site-theme");
+      return t === "light" || t === "dark" ? t : null;
+    } catch (e) { return null; }
+  }
+
+  function applyTheme(dark) {
+    root.classList.toggle("dark", dark);
+    root.dataset.theme = dark ? "dark" : "light";
+    if (themeMeta) themeMeta.setAttribute("content", dark ? "#14251f" : "#ffffff");
+    if (themeButton) themeButton.setAttribute("aria-pressed", String(dark));
+  }
+
+  applyTheme(root.classList.contains("dark"));
+
+  if (themeButton) {
+    themeButton.addEventListener("click", function () {
+      var dark = !root.classList.contains("dark");
+      applyTheme(dark);
+      try { localStorage.setItem("site-theme", dark ? "dark" : "light"); } catch (e) {}
+    });
+  }
+
+  if (darkQuery) {
+    var onSystemTheme = function (e) { if (!savedTheme()) applyTheme(e.matches); };
+    if (darkQuery.addEventListener) darkQuery.addEventListener("change", onSystemTheme);
+    else if (darkQuery.addListener) darkQuery.addListener(onSystemTheme);
+  }
+
+  /* ---------- FOYDALANUVCHI MENYUSI ---------- */
+  var userWrap = $("user-menu");
+  var userButton = $("user-menu-button");
+  var userDropdown = $("user-dropdown");
+
+  function userMenuOpen() { return userDropdown && !userDropdown.hidden; }
+
+  function setUserMenu(open, returnFocus) {
+    if (!userButton || !userDropdown) return;
+    userDropdown.hidden = !open;
+    userButton.setAttribute("aria-expanded", String(open));
+    if (open) {
+      var first = userDropdown.querySelector("a, button");
+      if (first) first.focus();
+    } else if (returnFocus) {
+      userButton.focus();
+    }
+  }
+
+  function menuItems() {
+    return Array.prototype.slice.call(userDropdown.querySelectorAll("a, button"));
+  }
+
+  if (userButton && userDropdown) {
+    userButton.addEventListener("click", function () {
+      setUserMenu(!userMenuOpen(), false);
+    });
+
+    userButton.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setUserMenu(true, false);
+      }
+    });
+
+    userDropdown.addEventListener("keydown", function (e) {
+      var items = menuItems();
+      var index = items.indexOf(document.activeElement);
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        items[(index + 1) % items.length].focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        items[(index - 1 + items.length) % items.length].focus();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        items[0].focus();
+      } else if (e.key === "End") {
+        e.preventDefault();
+        items[items.length - 1].focus();
+      } else if (e.key === "Tab") {
+        /* Menyu chegarasidan chiqilganda yopiladi */
+        var atEnd = !e.shiftKey && index === items.length - 1;
+        var atStart = e.shiftKey && index === 0;
+        if (atEnd || atStart) setUserMenu(false, atStart);
+      }
+    });
+  }
+
+  /* ---------- MOBIL MENYU ---------- */
+  var mobileButton = $("mobile-menu-button");
+  var mobileNav = $("main-navigation");
+
+  function mobileMenuOpen() { return mobileNav && mobileNav.classList.contains("is-open"); }
+
+  function setMobileMenu(open) {
+    if (!mobileButton || !mobileNav) return;
+    mobileNav.classList.toggle("is-open", open);
+    mobileButton.setAttribute("aria-expanded", String(open));
+    mobileButton.setAttribute(
+      "aria-label",
+      open ? "Navigatsiya menyusini yopish" : "Navigatsiya menyusini ochish"
+    );
+    if (open) setUserMenu(false, false);
+  }
+
+  if (mobileButton && mobileNav) {
+    mobileButton.addEventListener("click", function () {
+      setMobileMenu(!mobileMenuOpen());
+    });
+
+    mobileNav.addEventListener("click", function (e) {
+      if (e.target.closest("a")) setMobileMenu(false);
+    });
+
+    window.addEventListener("resize", function () {
+      if (window.innerWidth >= 768) setMobileMenu(false);
+    });
+  }
+
+  /* ---------- UMUMIY: tashqariga bosish va Escape ---------- */
+  document.addEventListener("click", function (e) {
+    if (userMenuOpen() && userWrap && !userWrap.contains(e.target)) {
+      setUserMenu(false, false);
+    }
+    if (mobileMenuOpen() &&
+        !mobileNav.contains(e.target) && !mobileButton.contains(e.target)) {
+      setMobileMenu(false);
+    }
+
+    var dismiss = e.target.closest("[data-dismiss-alert]");
+    if (dismiss) {
+      var alertEl = dismiss.closest(".alert");
+      var wrap = alertEl && alertEl.parentElement;
+      if (alertEl) alertEl.remove();
+      if (wrap && wrap.classList.contains("messages") && !wrap.children.length) wrap.remove();
+    }
+  });
+
+  /* Escape faqat biror menyu ochiq bo'lsa ishlaydi (boshqa elementlardan fokusni o'g'irlamaydi) */
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+
+    if (userMenuOpen()) {
+      setUserMenu(false, true);
+    } else if (mobileMenuOpen()) {
+      setMobileMenu(false);
+      if (mobileButton) mobileButton.focus();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

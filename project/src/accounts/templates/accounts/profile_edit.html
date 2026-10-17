@@ -1,0 +1,13 @@
+{% extends "accounts/accounts_base.html" %}
+{% block title %}Profilni tahrirlash{% endblock %}
+{% block page_heading %}Profilni tahrirlash{% endblock %}
+{% block page_subheading %}{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-md">
+  <section class="site-surface site-border rounded-xl border p-5 sm:p-6">
+    <h1 class="site-text mb-4 text-xl font-bold">Profilni tahrirlash</h1>
+    {% include "accounts/_form.html" with submit_label="Saqlash" %}
+  </section>
+  <p class="mt-4 text-sm"><a class="underline focus:outline-none focus:ring-2" style="color:var(--accent)" href="{% url 'accounts:settings' %}">&larr; Sozlamalar</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,118 @@
+
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+.Python
+
+# ==========================================
+# Virtual environments
+# ==========================================
+venv/
+.venv/
+env/
+ENV/
+virtualenv/
+
+# ==========================================
+# Django
+# ==========================================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+db.sqlite3-*
+media/
+staticfiles/
+static_root/
+
+# ==========================================
+# Database files
+# ==========================================
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.sqlitedb
+
+# ==========================================
+# Django migrations
+# Ignore migration files inside every app,
+# but keep each migrations/__init__.py
+# ==========================================
+**/migrations/*
+!**/migrations/__init__.py
+
+# ==========================================
+# Environment variables and secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# ==========================================
+# IDEs and editors
+# ==========================================
+.vscode/
+.idea/
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ==========================================
+# Operating systems
+# ==========================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ==========================================
+# Testing and coverage
+# ==========================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+test-results/
+coverage.xml
+
+# ==========================================
+# Type checkers and linters
+# ==========================================
+.mypy_cache/
+.dmypy.json
+.pyre/
+.ruff_cache/
+.pytype/
+
+# ==========================================
+# Build and distribution
+# ==========================================
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# ==========================================
+# Jupyter
+# ==========================================
+.ipynb_checkpoints/
+
+# ==========================================
+# Temporary files
+# ==========================================
+*.tmp
+*.bak
+*.orig
+*.rej

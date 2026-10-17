@@ -1,0 +1,10 @@
+{% if messages %}
+<div class="mb-4 space-y-2" aria-live="polite">
+  {% for message in messages %}
+  <div role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}"
+       class="rounded-lg border px-4 py-3 text-sm {% if message.level_tag == 'error' %}border-red-300 bg-red-50 text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100{% elif message.level_tag == 'success' %}border-green-300 bg-green-50 text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-100{% else %}border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

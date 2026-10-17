@@ -1,0 +1,37 @@
+{% extends "accounts/accounts_base.html" %}
+{% block title %}Sozlamalar{% endblock %}
+{% block page_heading %}Sozlamalar{% endblock %}
+{% block page_subheading %}Hisob va xavfsizlik{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-2xl space-y-5">
+  <nav aria-label="Sozlamalar" class="site-surface site-border divide-y rounded-xl border" style="border-color:var(--border)">
+    <a class="site-text block px-5 py-3 text-sm font-medium hover:underline focus:outline-none focus:ring-2" href="{% url 'accounts:profile_edit' %}">Profilni tahrirlash</a>
+    <a class="site-text block px-5 py-3 text-sm font-medium hover:underline focus:outline-none focus:ring-2" href="{% url 'accounts:privacy' %}">Maxfiylik</a>
+    <a class="site-text block px-5 py-3 text-sm font-medium hover:underline focus:outline-none focus:ring-2" href="{% url 'accounts:password_change' %}">Parolni almashtirish</a>
+    <a class="site-text block px-5 py-3 text-sm font-medium hover:underline focus:outline-none focus:ring-2" href="{% url 'accounts:email_change' %}">Emailni o'zgartirish</a>
+  </nav>
+
+  <section class="site-surface site-border rounded-xl border p-5 text-sm" aria-labelledby="email-status">
+    <h2 id="email-status" class="site-text font-semibold">Email holati</h2>
+    <p class="site-muted mt-1 break-words">{{ user.email|default:"—" }} — {% if user.is_email_verified %}tasdiqlangan{% else %}tasdiqlanmagan{% endif %}</p>
+    {% if user.pending_email %}<p class="site-muted mt-1 break-words">Kutilayotgan yangi email: {{ user.pending_email }}</p>{% endif %}
+    {% if not user.is_email_verified or user.pending_email %}
+    <form method="post" action="{% url 'accounts:resend_verification' %}" class="mt-3">{% csrf_token %}
+      <button type="submit" class="underline focus:outline-none focus:ring-2" style="color:var(--accent)">Tasdiqlash xatini qayta yuborish</button>
+    </form>
+    {% endif %}
+  </section>
+
+  <section class="site-surface site-border rounded-xl border p-5 text-sm" aria-labelledby="acc-status">
+    <h2 id="acc-status" class="site-text font-semibold">Hisob holati</h2>
+    <p class="site-muted mt-1">Hisobni vaqtincha o'chirib qo'yish mumkin; ma'lumotlar saqlanadi va parol bilan qayta yoqiladi.</p>
+    <a href="{% url 'accounts:deactivate' %}" class="site-text site-border mt-3 inline-block rounded-lg border px-3 py-2 font-medium hover:underline focus:outline-none focus:ring-2">Hisobni faolsizlantirish</a>
+  </section>
+
+  <section class="rounded-xl border p-5 text-sm" style="border-color:var(--error-bd);background:var(--error-bg);color:var(--error-fg)" aria-labelledby="danger">
+    <h2 id="danger" class="font-semibold">Xavfli hudud</h2>
+    <p class="mt-1">Hisobni butunlay o'chirish qaytarilmaydi.</p>
+    <a href="{% url 'accounts:delete' %}" class="mt-3 inline-block rounded-lg bg-red-700 px-3 py-2 font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">Hisobni butunlay o'chirish</a>
+  </section>
+</div>
+{% endblock %}

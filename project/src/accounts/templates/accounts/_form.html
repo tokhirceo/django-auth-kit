@@ -1,0 +1,11 @@
+<form method="post" novalidate {% if form.is_multipart %}enctype="multipart/form-data"{% endif %} class="space-y-5">
+  {% csrf_token %}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  {% if form.non_field_errors %}
+  <div role="alert" class="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100">
+    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+  </div>
+  {% endif %}
+  {% for field in form %}{% include "accounts/_field.html" %}{% endfor %}
+  <button type="submit" class="inline-flex w-full justify-center rounded-lg {% if danger %}bg-red-700 hover:bg-red-800 focus:ring-red-500{% else %}bg-indigo-700 hover:bg-indigo-800 focus:ring-indigo-500{% endif %} px-4 py-2 font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2">{{ submit_label|default:"Saqlash" }}</button>
+</form>

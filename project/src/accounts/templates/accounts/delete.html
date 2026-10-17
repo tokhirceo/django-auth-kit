@@ -1,0 +1,14 @@
+{% extends "accounts/accounts_base.html" %}
+{% block title %}Hisobni butunlay o'chirish{% endblock %}
+{% block page_heading %}Hisobni butunlay o'chirish{% endblock %}
+{% block page_subheading %}{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-md">
+  <section class="site-surface site-border rounded-xl border p-5 sm:p-6">
+    <h1 class="site-text mb-4 text-xl font-bold">Hisobni butunlay o'chirish</h1>
+    <div role="alert" class="mb-4 rounded-lg border p-3 text-sm" style="border-color:var(--error-bd);background:var(--error-bg);color:var(--error-fg)"><p class="font-medium">Diqqat: bu amal qaytarib bo'lmaydi.</p><ul class="mt-2 list-disc pl-5"><li>Profil, avatar va maxfiylik sozlamalari yo'qoladi.</li><li>Barcha qurilmalardagi sessiyalar tugaydi.</li><li>Email va username bo'shaydi; yangi hisob eskisining davomi bo'lmaydi.</li><li>Boshqa ilovalardagi ma'lumotlar ularning o'z siyosatiga ko'ra ("Deleted User" kabi) qolishi mumkin.</li></ul>{% if grace_days %}<p class="mt-2">Hisob {{ grace_days }} kunlik kutish davridan keyin to'liq o'chiriladi (bu davrda kira olmaysiz).</p>{% endif %}</div>
+    {% include "accounts/_form.html" with submit_label="Hisobni butunlay o'chirish" danger=True %}
+  </section>
+  <p class="mt-4 text-sm"><a class="underline focus:outline-none focus:ring-2" style="color:var(--accent)" href="{% url 'accounts:settings' %}">&larr; Sozlamalar</a></p>
+</div>
+{% endblock %}

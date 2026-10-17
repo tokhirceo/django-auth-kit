@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Emailni tasdiqlang{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-md px-4 py-10">
+  <h1 class="mb-6 text-2xl font-semibold text-slate-900 dark:text-slate-100">Emailingizni tasdiqlang</h1>
+  {% include "accounts/_messages.html" %}
+  <p class="text-sm text-slate-600 dark:text-slate-300">Davom etish uchun email manzilingizga yuborilgan havola orqali tasdiqlang.</p>
+  <form method="post" action="{% url 'accounts:resend_verification' %}" class="mt-5">
+    {% csrf_token %}
+    <button type="submit" class="inline-flex w-full justify-center rounded-lg bg-indigo-700 px-4 py-2 font-medium text-white hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Xatni qayta yuborish</button>
+  </form>
+  <p class="mt-6"><a class="font-medium text-indigo-700 underline hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-indigo-300 dark:hover:text-indigo-100" href="{% url 'accounts:login' %}">Kirish sahifasi</a></p>
+</div>
+{% endblock %}

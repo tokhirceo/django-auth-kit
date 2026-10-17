@@ -1,0 +1,8 @@
+{% autoescape off %}Salom, {{ user.username }}!
+
+{% if is_change %}Yangi email manzilingizni tasdiqlash{% else %}Email manzilingizni tasdiqlash{% endif %} uchun quyidagi havolaga o'ting va tugmani bosing:
+
+{{ verify_url }}
+
+Havola {{ timeout_hours }} soat amal qiladi va bir marta ishlatiladi. Agar bu so'rovni siz yubormagan bo'lsangiz, xatga e'tibor bermang.
+{% endautoescape %}

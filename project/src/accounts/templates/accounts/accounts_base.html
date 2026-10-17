@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+{% comment %}
+  accounts_base.html — shaxsiy kabinet (accounts) uchun asosiy shablon.
+
+  Talablar:
+    * loyiha urls.py da `home` nomli URL bo'lishi shart (logo havolasi).
+    * settings.py -> TEMPLATES -> context_processors ichida
+      "django.template.context_processors.request" bo'lishi shart.
+    * "django.contrib.messages" yoqilgan bo'lishi kerak (xabarlar uchun).
+
+  Bloklar:
+    title, site_name, brand_name, meta_description, extra_head, tailwind,
+    page_heading, page_subheading, sidebar_extra,
+    messages, content, extra_js
+{% endcomment %}
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f7f9f7">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="{% block meta_description %}Profil va hisob sozlamalarini boshqaring{% endblock %}">
+
+  <title>{% block title %}Shaxsiy kabinet{% endblock %} | {% block site_name %}Sayt{% endblock %}</title>
+
+  <!--
+    Mavzu va sidebar holatini sahifa chizilishidan OLDIN o'rnatish
+    (yonib-o'chish / FOUC bo'lmasligi uchun).
+  -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      try {
+        var theme = localStorage.getItem("site-theme");
+        var dark = theme === "dark" ||
+          (theme !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        root.classList.toggle("dark", dark);
+
+        if (window.matchMedia("(min-width: 1024px)").matches &&
+            localStorage.getItem("sidebar-collapsed") === "1") {
+          root.classList.add("sidebar-collapsed");
+        }
+      } catch (e) {
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          root.classList.add("dark");
+        }
+      }
+    })();
+  </script>
+
+  {% block tailwind %}
+  {# Ishlab chiqish uchun CDN. Production'da Tailwind CLI bilan kompilyatsiya qilingan CSS ulang. #}
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              50: "#eff8f2", 100: "#dcefe1", 200: "#b9dfc5", 300: "#8bc9a1",
+              400: "#5bad7b", 500: "#358e5b", 600: "#267247", 700: "#205b3b",
+              800: "#1c4932", 900: "#183c2b", 950: "#0b2117"
+            }
+          }
+        }
+      }
+    };
+  </script>
+  {% endblock %}
+
+  <style>
+    /* ================================
+       O'ZGARUVCHILAR
+    ================================= */
+    :root {
+      color-scheme: light;
+
+      --header-height: 64px;
+      --sidebar-width: 272px;
+
+      --page: #f7f9f7;
+      --surface: #ffffff;
+      --surface-soft: #f1f5f2;
+      --text: #17251c;
+      --muted: #596a5e;
+      --border: #dfe7e0;
+      --accent: #267247;
+      --accent-contrast: #ffffff;
+      --hover: #eaf5ee;
+      --overlay: rgb(0 0 0 / 45%);
+      --ring: #267247;
+
+      --success-bg: #e8f6ed; --success-fg: #14532d; --success-bd: #b7e2c4;
+      --info-bg:    #e9f1fb; --info-fg:    #1e3a8a; --info-bd:    #bcd3f2;
+      --warning-bg: #fdf4df; --warning-fg: #78350f; --warning-bd: #f0d9a0;
+      --error-bg:   #fdebea; --error-fg:   #7f1d1d; --error-bd:   #f3bcb8;
+    }
+
+    html.dark {
+      color-scheme: dark;
+
+      --page: #14251f;
+      --surface: #1b3027;
+      --surface-soft: #223a30;
+      --text: #e5f1e8;
+      --muted: #a2b8a8;
+      --border: #30483a;
+      --accent: #83d6a1;
+      --accent-contrast: #0b2117;
+      --hover: #223a30;
+      --overlay: rgb(0 0 0 / 60%);
+      --ring: #83d6a1;
+
+      --success-bg: #17372a; --success-fg: #b6ecc9; --success-bd: #2a5a42;
+      --info-bg:    #1a2e4a; --info-fg:    #bcd6fb; --info-bd:    #2d4a73;
+      --warning-bg: #3b3115; --warning-fg: #f5dfa2; --warning-bd: #5e4f22;
+      --error-bg:   #3f1f1f; --error-fg:   #f8c4c0; --error-bd:   #6a3333;
+    }
+
+    /* ================================
+       ASOS
+    ================================= */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scrollbar-gutter: stable;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    html.scroll-lock { overflow: hidden; }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    [hidden] { display: none !important; }
+
+    :focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    .skip-link {
+      position: absolute;
+      z-index: 100;
+      top: 8px;
+      left: 8px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transform: translateY(-200%);
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    /* Mos kelish uchun yordamchi sinflar */
+    .site-surface { background: var(--surface); }
+    .site-soft    { background: var(--surface-soft); }
+    .site-text    { color: var(--text); }
+    .site-muted   { color: var(--muted); }
+    .site-border  { border-color: var(--border); }
+
+    /* ================================
+       YUQORI PANEL
+    ================================= */
+    .accounts-header {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+
+      height: var(--header-height);
+      padding: 0 20px;
+      padding-top: env(safe-area-inset-top, 0px);
+
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-start,
+    .header-end {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #205b3b;
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .brand-name { font-size: 16px; font-weight: 700; }
+
+    .header-heading {
+      min-width: 0;
+      padding-left: 14px;
+      border-left: 1px solid var(--border);
+    }
+    .header-heading p { margin: 0; }
+    .header-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .header-subtitle {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .header-user {
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .icon-button {
+      display: inline-grid;
+      place-items: center;
+      flex-shrink: 0;
+
+      width: 40px;
+      height: 40px;
+      padding: 0;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-soft);
+      color: var(--text);
+      cursor: pointer;
+
+      transition: background-color 150ms ease, border-color 150ms ease;
+    }
+    .icon-button:hover { border-color: var(--accent); background: var(--hover); }
+    .icon-button:active { transform: scale(0.97); }
+    .icon-button svg { width: 20px; height: 20px; }
+
+    .icon-moon { display: none; }
+    html.dark .icon-sun { display: none; }
+    html.dark .icon-moon { display: block; }
+
+    /* ================================
+       SIDEBAR
+    ================================= */
+    .accounts-sidebar {
+      position: fixed;
+      z-index: 50;
+      top: var(--header-height);
+      bottom: 0;
+      left: 0;
+
+      width: var(--sidebar-width);
+      max-width: 88vw;
+
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      will-change: transform;
+    }
+
+    html.ready .accounts-sidebar { transition: transform 200ms ease; }
+    html.ready .accounts-main    { transition: margin-left 200ms ease; }
+
+    .sidebar-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 16px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 4px 8px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-soft);
+    }
+
+    .user-avatar {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-weight: 700;
+    }
+
+    .user-meta { min-width: 0; }
+    .user-meta p {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .user-name  { font-size: 14px; font-weight: 700; }
+    .user-email { color: var(--muted); font-size: 12px; }
+
+    .sidebar-label {
+      margin: 18px 12px 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .nav-list,
+    .nav-sub {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .nav-list { display: grid; gap: 2px; }
+
+    .nav-link,
+    .nav-summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+
+      transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .nav-link:hover,
+    .nav-summary:hover {
+      background: var(--hover);
+      color: var(--accent);
+    }
+
+    .nav-link[aria-current="page"] {
+      background: var(--hover);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .nav-link svg,
+    .nav-summary > svg:first-child {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .nav-link span,
+    .nav-summary span { min-width: 0; overflow-wrap: anywhere; }
+
+    /* Dropdown (details) */
+    .nav-summary { list-style: none; justify-content: flex-start; }
+    .nav-summary::-webkit-details-marker { display: none; }
+    .nav-summary .chevron {
+      width: 16px;
+      height: 16px;
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: transform 150ms ease;
+    }
+    details[open] > .nav-summary .chevron { transform: rotate(180deg); }
+
+    .nav-sub {
+      display: grid;
+      gap: 2px;
+      margin: 2px 0 4px 22px;
+      padding-left: 10px;
+      border-left: 1px solid var(--border);
+    }
+    .nav-sub .nav-link {
+      min-height: 38px;
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+
+    .nav-danger:hover { background: var(--error-bg); color: var(--error-fg); }
+
+    .sidebar-divider {
+      margin: 14px 4px;
+      border: 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 20px 12px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .sidebar-footer p { margin: 0; }
+
+    /* ================================
+       ASOSIY KONTENT
+    ================================= */
+    .accounts-main {
+      min-height: calc(100vh - var(--header-height));
+      min-height: calc(100dvh - var(--header-height));
+    }
+
+    .accounts-content {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Xabarlar (django.contrib.messages) */
+    .messages {
+      display: grid;
+      gap: 10px;
+      margin: 0 0 20px;
+    }
+
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .alert-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .alert-close {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      margin: -4px -6px -4px 0;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: inherit;
+      opacity: 0.7;
+      cursor: pointer;
+    }
+    .alert-close:hover { opacity: 1; background: rgb(0 0 0 / 8%); }
+    .alert-close svg { width: 16px; height: 16px; }
+
+    .alert-success { background: var(--success-bg); color: var(--success-fg); border-color: var(--success-bd); }
+    .alert-info,
+    .alert-debug   { background: var(--info-bg);    color: var(--info-fg);    border-color: var(--info-bd); }
+    .alert-warning { background: var(--warning-bg); color: var(--warning-fg); border-color: var(--warning-bd); }
+    .alert-error   { background: var(--error-bg);   color: var(--error-fg);   border-color: var(--error-bd); }
+
+    /* ================================
+       MOBIL QOPLAMA
+    ================================= */
+    .sidebar-overlay { display: none; }
+
+    /* ================================
+       KOMPYUTER (>= 1024px)
+    ================================= */
+    @media (min-width: 1024px) {
+      .has-sidebar .accounts-main { margin-left: var(--sidebar-width); }
+
+      html.sidebar-collapsed .accounts-sidebar { transform: translateX(-100%); }
+      html.sidebar-collapsed .has-sidebar .accounts-main { margin-left: 0; }
+    }
+
+    /* ================================
+       TABLET VA TELEFON (< 1024px)
+    ================================= */
+    @media (max-width: 1023.98px) {
+      .accounts-sidebar {
+        z-index: 70;
+        width: 300px;
+        transform: translateX(-100%);
+      }
+
+      html.sidebar-open .accounts-sidebar {
+        transform: translateX(0);
+        box-shadow: 12px 0 32px rgb(0 0 0 / 16%);
+      }
+
+      html.sidebar-open .sidebar-overlay {
+        display: block;
+        position: fixed;
+        z-index: 65;
+        inset: var(--header-height) 0 0 0;
+        background: var(--overlay);
+        touch-action: manipulation;
+      }
+
+      .accounts-header { padding-right: 16px; padding-left: 16px; }
+      .accounts-content { padding: 20px; }
+    }
+
+    @media (max-width: 639.98px) {
+      .header-heading { display: none; }
+      .header-user { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .accounts-header { gap: 8px; padding-right: 12px; padding-left: 12px; }
+      .header-start, .header-end { gap: 8px; }
+      .brand-name { display: none; }
+      .accounts-content { padding: 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+
+    @media print {
+      .accounts-header, .accounts-sidebar, .sidebar-overlay, .skip-link { display: none !important; }
+      .has-sidebar .accounts-main { margin-left: 0 !important; }
+      body { background: #fff; color: #000; }
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="{% if user.is_authenticated %}has-sidebar{% endif %}">
+
+<a href="#main-content" class="skip-link">Asosiy kontentga o‘tish</a>
+
+{% with current=request.resolver_match.url_name %}
+
+  <!-- ====== YUQORI PANEL ====== -->
+  <header class="accounts-header">
+    <div class="header-start">
+      {% if user.is_authenticated %}
+        <button
+          id="sidebar-toggle"
+          type="button"
+          class="icon-button"
+          aria-controls="accounts-sidebar"
+          aria-expanded="false"
+          aria-label="Yon menyuni ochish"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      {% endif %}
+
+      <a href="{% url 'home' %}" class="header-brand" aria-label="Bosh sahifaga o‘tish">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-name">{% block brand_name %}Sayt{% endblock %}</span>
+      </a>
+
+      <div class="header-heading">
+        <p class="header-title">{% block page_heading %}Shaxsiy kabinet{% endblock %}</p>
+        <p class="header-subtitle">{% block page_subheading %}Profil va hisob sozlamalari{% endblock %}</p>
+      </div>
+    </div>
+
+    <div class="header-end">
+      {% if user.is_authenticated %}
+        <span class="header-user">{{ user.get_username }}</span>
+      {% endif %}
+
+      <button
+        id="theme-toggle"
+        type="button"
+        class="icon-button"
+        aria-label="Qorong‘i mavzuga o‘tish"
+        title="Mavzuni almashtirish"
+      >
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  {% if user.is_authenticated %}
+  <!-- ====== SIDEBAR (faqat tizimga kirgan foydalanuvchi uchun) ====== -->
+  <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+  <aside id="accounts-sidebar" class="accounts-sidebar" aria-label="Hisob navigatsiyasi">
+    <div class="sidebar-inner">
+
+      <div class="user-card">
+        <span class="user-avatar" aria-hidden="true">{{ user.get_username|slice:":1"|upper }}</span>
+        <div class="user-meta">
+          <p class="user-name">{{ user.get_full_name|default:user.get_username }}</p>
+          {% if user.email %}<p class="user-email">{{ user.email }}</p>{% endif %}
+        </div>
+      </div>
+
+      <nav aria-label="Hisob menyusi">
+
+        <p class="sidebar-label">Asosiy</p>
+        <ul class="nav-list">
+          <li>
+            <a href="{% url 'accounts:profile' %}" class="nav-link"
+               {% if current == 'profile' %}aria-current="page"{% endif %}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
+              </svg>
+              <span>Profilim</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'accounts:public_profile' username=user.get_username %}" class="nav-link"
+               {% if current == 'public_profile' %}aria-current="page"{% endif %}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="9" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/>
+              </svg>
+              <span>Ommaviy profilim</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'accounts:profile_edit' %}" class="nav-link"
+               {% if current == 'profile_edit' %}aria-current="page"{% endif %}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
+              </svg>
+              <span>Profilni tahrirlash</span>
+            </a>
+          </li>
+        </ul>
+
+        <p class="sidebar-label">Sozlamalar</p>
+        <ul class="nav-list">
+
+          <!-- Umumiy sozlamalar -->
+          <li>
+            <details {% if current == 'settings' or current == 'privacy' or current == 'deactivate' or current == 'delete' %}open{% endif %}>
+              <summary class="nav-summary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>
+                </svg>
+                <span>Sozlamalar</span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </summary>
+              <ul class="nav-sub">
+                <li><a href="{% url 'accounts:settings' %}" class="nav-link"
+                       {% if current == 'settings' %}aria-current="page"{% endif %}>Umumiy sozlamalar</a></li>
+                <li><a href="{% url 'accounts:privacy' %}" class="nav-link"
+                       {% if current == 'privacy' %}aria-current="page"{% endif %}>Maxfiylik</a></li>
+                <li><a href="{% url 'accounts:deactivate' %}" class="nav-link"
+                       {% if current == 'deactivate' %}aria-current="page"{% endif %}>Hisobni vaqtincha o‘chirish</a></li>
+                <li><a href="{% url 'accounts:delete' %}" class="nav-link nav-danger"
+                       {% if current == 'delete' %}aria-current="page"{% endif %}>Hisobni butunlay o‘chirish</a></li>
+              </ul>
+            </details>
+          </li>
+
+          <!-- Parol va xavfsizlik -->
+          <li>
+            <details {% if current == 'password_change' or current == 'password_change_done' or current == 'password_reset' or current == 'password_reset_done' or current == 'password_reset_confirm' or current == 'password_reset_complete' %}open{% endif %}>
+              <summary class="nav-summary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="4" y="10" width="16" height="11" rx="2"/>
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/>
+                </svg>
+                <span>Parol va xavfsizlik</span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </summary>
+              <ul class="nav-sub">
+                <li><a href="{% url 'accounts:password_change' %}" class="nav-link"
+                       {% if current == 'password_change' or current == 'password_change_done' %}aria-current="page"{% endif %}>Parolni almashtirish</a></li>
+                <li><a href="{% url 'accounts:password_reset' %}" class="nav-link"
+                       {% if current == 'password_reset' or current == 'password_reset_done' or current == 'password_reset_confirm' or current == 'password_reset_complete' %}aria-current="page"{% endif %}>Parolni tiklash</a></li>
+              </ul>
+            </details>
+          </li>
+
+          <!-- Elektron pochta -->
+          <li>
+            <details {% if current == 'email_change' or current == 'resend_verification' or current == 'verification_required' or current == 'verify_email' %}open{% endif %}>
+              <summary class="nav-summary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>
+                </svg>
+                <span>Elektron pochta</span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </summary>
+              <ul class="nav-sub">
+                <li><a href="{% url 'accounts:email_change' %}" class="nav-link"
+                       {% if current == 'email_change' %}aria-current="page"{% endif %}>Emailni almashtirish</a></li>
+                <li>
+                  {# Bu view faqat POST qabul qiladi, shuning uchun havola emas, forma #}
+                  <form method="post" action="{% url 'accounts:resend_verification' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link">Tasdiqlash xatini yuborish</button>
+                  </form>
+                </li>
+                <li><a href="{% url 'accounts:verification_required' %}" class="nav-link"
+                       {% if current == 'verification_required' or current == 'verify_email' %}aria-current="page"{% endif %}>Email tasdiqlash holati</a></li>
+              </ul>
+            </details>
+          </li>
+        </ul>
+
+        {% block sidebar_extra %}{% endblock %}
+      </nav>
+
+      <hr class="sidebar-divider">
+
+      <!-- Hisobdan chiqish (POST + CSRF) -->
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="nav-link nav-danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/>
+          </svg>
+          <span>Hisobdan chiqish</span>
+        </button>
+      </form>
+
+      <div class="sidebar-footer">
+        <p>Hisobingizni boshqaring</p>
+      </div>
+    </div>
+  </aside>
+  {% endif %}
+
+  <!-- ====== ASOSIY SAHIFA ====== -->
+  <div class="accounts-main">
+    <main id="main-content" class="accounts-content" tabindex="-1">
+
+      {% block messages %}
+        {% if messages %}
+          <div class="messages" aria-live="polite">
+            {% for message in messages %}
+              <div class="alert alert-{{ message.level_tag|default:'info' }}"
+                   role="{% if message.level_tag == 'error' or message.level_tag == 'warning' %}alert{% else %}status{% endif %}">
+                <div class="alert-text">{{ message }}</div>
+                <button type="button" class="alert-close" data-dismiss-alert aria-label="Xabarni yopish">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endblock %}
+
+      {% block content %}
+        <section class="site-surface site-border rounded-xl border p-6">
+          <h1 class="site-text text-xl font-bold">Shaxsiy kabinet</h1>
+          <p class="site-muted mt-2 text-sm">Kerakli bo‘limni menyudan tanlang.</p>
+        </section>
+      {% endblock %}
+
+    </main>
+  </div>
+
+{% endwith %}
+
+<script>
+(function () {
+  "use strict";
+
+  var root = document.documentElement;
+
+  function store(key, value) {
+    try {
+      if (value === null) localStorage.removeItem(key);
+      else localStorage.setItem(key, value);
+    } catch (e) {}
+  }
+
+  /* ---------- MAVZU ---------- */
+  var themeButton = document.getElementById("theme-toggle");
+  var themeMeta = document.querySelector('meta[name="theme-color"]');
+  var darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+  function hasSavedTheme() {
+    try {
+      var t = localStorage.getItem("site-theme");
+      return t === "light" || t === "dark";
+    } catch (e) { return false; }
+  }
+
+  function applyTheme(dark) {
+    root.classList.toggle("dark", dark);
+    if (themeMeta) themeMeta.setAttribute("content", dark ? "#14251f" : "#f7f9f7");
+    if (themeButton) {
+      themeButton.setAttribute(
+        "aria-label",
+        dark ? "Yorug‘ mavzuga o‘tish" : "Qorong‘i mavzuga o‘tish"
+      );
+    }
+  }
+
+  applyTheme(root.classList.contains("dark"));
+
+  if (themeButton) {
+    themeButton.addEventListener("click", function () {
+      var dark = !root.classList.contains("dark");
+      applyTheme(dark);
+      store("site-theme", dark ? "dark" : "light");
+    });
+  }
+
+  /* Foydalanuvchi tanlamagan bo'lsa, tizim mavzusini kuzatish */
+  var onSystemTheme = function (e) { if (!hasSavedTheme()) applyTheme(e.matches); };
+  if (darkQuery.addEventListener) darkQuery.addEventListener("change", onSystemTheme);
+  else if (darkQuery.addListener) darkQuery.addListener(onSystemTheme);
+
+  /* ---------- XABARLARNI YOPISH ---------- */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-dismiss-alert]");
+    if (!btn) return;
+    var alertEl = btn.closest(".alert");
+    var wrap = alertEl && alertEl.parentElement;
+    if (alertEl) alertEl.remove();
+    if (wrap && wrap.classList.contains("messages") && !wrap.children.length) wrap.remove();
+  });
+
+  /* ---------- SIDEBAR ---------- */
+  var sidebar = document.getElementById("accounts-sidebar");
+  var toggle = document.getElementById("sidebar-toggle");
+  var overlay = document.getElementById("sidebar-overlay");
+  var main = document.getElementById("main-content");
+
+  if (!sidebar || !toggle || !overlay) {
+    requestAnimationFrame(function () { root.classList.add("ready"); });
+    return;
+  }
+
+  var desktopQuery = window.matchMedia("(min-width: 1024px)");
+  var isDesktop = function () { return desktopQuery.matches; };
+
+  function isOpen() {
+    return isDesktop()
+      ? !root.classList.contains("sidebar-collapsed")
+      : root.classList.contains("sidebar-open");
+  }
+
+  function render() {
+    var open = isOpen();
+    var mobileOpen = !isDesktop() && open;
+
+    sidebar.inert = !open;
+    if (main) main.inert = mobileOpen;
+    root.classList.toggle("scroll-lock", mobileOpen);
+
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Yon menyuni yopish" : "Yon menyuni ochish");
+  }
+
+  function setOpen(open) {
+    if (isDesktop()) {
+      root.classList.toggle("sidebar-collapsed", !open);
+      store("sidebar-collapsed", open ? null : "1");
+    } else {
+      root.classList.toggle("sidebar-open", open);
+    }
+    render();
+
+    if (open && !isDesktop()) {
+      var first = sidebar.querySelector("a, button, summary");
+      if (first) first.focus();
+    }
+  }
+
+  toggle.addEventListener("click", function () { setOpen(!isOpen()); });
+
+  overlay.addEventListener("click", function () {
+    setOpen(false);
+    toggle.focus();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !isDesktop() && isOpen()) {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+
+  /* Mobil qurilmada havola bosilganda menyu yopiladi */
+  sidebar.addEventListener("click", function (e) {
+    if (!isDesktop() && e.target.closest("a")) setOpen(false);
+  });
+
+  /* Ekran o'lchami o'zgarganda holatni to'g'rilash */
+  var onViewportChange = function () {
+    root.classList.remove("sidebar-open");
+    if (!isDesktop()) root.classList.remove("sidebar-collapsed");
+    else if (localStorage_get("sidebar-collapsed") === "1") root.classList.add("sidebar-collapsed");
+    render();
+  };
+
+  function localStorage_get(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  if (desktopQuery.addEventListener) desktopQuery.addEventListener("change", onViewportChange);
+  else if (desktopQuery.addListener) desktopQuery.addListener(onViewportChange);
+
+  onViewportChange();
+
+  /* Birinchi chizilishdan keyin animatsiyalarni yoqish */
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () { root.classList.add("ready"); });
+  });
+})();
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>
