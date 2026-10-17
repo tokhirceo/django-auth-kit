@@ -1,8 +1,580 @@
 {% extends "base.html" %}
-{% block title %}Bosh sahifa{% endblock %}
+
+{% comment %}
+  home.html: landing page for the reusable Django `accounts` app.
+
+  Assumptions (adapt if your base.html differs):
+    - base.html defines {% block title %} and {% block content %}.
+    - Tailwind dark: variants follow the theme already set up in base.html.
+    - Routes used: accounts:signup, accounts:login, accounts:profile,
+      accounts:settings, accounts:privacy, accounts:password_reset,
+      accounts:reactivate. Page navigation uses in-page anchors only.
+{% endcomment %}
+
+{% block title %}Django accounts: reusable authentication and account management{% endblock %}
+
 {% block content %}
-<div class="mx-auto max-w-3xl px-4 py-8">
-  {% include "accounts/_messages.html" %}
-  <h1 class="text-2xl font-semibold">Bosh sahifa</h1>
+<div class="text-slate-700 dark:text-slate-300">
+
+  {# ───────────── Section navigation ───────────── #}
+  <nav aria-label="Page sections"
+       class="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <a href="#top"
+         class="rounded text-sm font-semibold tracking-tight text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-white">
+        <span class="text-emerald-600 dark:text-emerald-400">django</span>/accounts
+      </a>
+
+      <ul class="hidden items-center gap-1 text-sm md:flex">
+        <li><a href="#features" class="rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">Features</a></li>
+        <li><a href="#security" class="rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">Security</a></li>
+        <li><a href="#architecture" class="rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">Architecture</a></li>
+        <li><a href="#integration" class="rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">Integration</a></li>
+      </ul>
+
+      {# Mobile menu: native <details>, no JavaScript required #}
+      <details class="relative md:hidden">
+        <summary class="flex cursor-pointer list-none items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:text-slate-200 [&::-webkit-details-marker]:hidden">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          Sections
+        </summary>
+        <ul class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 text-sm shadow-lg dark:border-slate-800 dark:bg-slate-900">
+          <li><a href="#features" class="block rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">Features</a></li>
+          <li><a href="#security" class="block rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">Security</a></li>
+          <li><a href="#architecture" class="block rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">Architecture</a></li>
+          <li><a href="#integration" class="block rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">Integration</a></li>
+        </ul>
+      </details>
+    </div>
+  </nav>
+
+  {# ───────────── A. Hero ───────────── #}
+  <section id="top" class="relative overflow-hidden border-b border-slate-200 dark:border-slate-800">
+    <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+      <div class="absolute -top-32 left-1/2 h-96 w-[48rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-3xl dark:bg-emerald-500/10"></div>
+    </div>
+
+    <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
+      <div>
+        <p class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span>
+          Django / Account Management
+        </p>
+
+        <h1 class="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-white">
+          Authentication and account management,
+          <span class="text-emerald-600 dark:text-emerald-400">in one reusable Django app.</span>
+        </h1>
+
+        <p class="mt-6 max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-400">
+          Registration, email verification, password recovery, profiles, privacy controls and the full
+          account lifecycle, organised behind a service layer and wired in through
+          <code class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-200">AUTH_USER_MODEL</code>,
+          one URL include and Django signals.
+        </p>
+
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          {% if user.is_authenticated %}
+            <a href="{% url 'accounts:profile' %}"
+               class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950">
+              Open your profile
+            </a>
+            <a href="{% url 'accounts:settings' %}"
+               class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950">
+              Account settings
+            </a>
+          {% else %}
+            <a href="{% url 'accounts:signup' %}"
+               class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950">
+              Create an account
+            </a>
+            <a href="{% url 'accounts:login' %}"
+               class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950">
+              Sign in
+            </a>
+          {% endif %}
+        </div>
+
+        <dl class="mt-10 grid max-w-xl grid-cols-1 gap-4 border-t border-slate-200 pt-6 sm:grid-cols-3 dark:border-slate-800">
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500">Identity</dt>
+            <dd class="mt-1 text-sm text-slate-700 dark:text-slate-300">Custom user model, login by username or email</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500">Logic</dt>
+            <dd class="mt-1 text-sm text-slate-700 dark:text-slate-300">Business operations in <code class="font-mono text-xs">services.py</code></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500">Extensible</dt>
+            <dd class="mt-1 text-sm text-slate-700 dark:text-slate-300">Signals fired after successful commits</dd>
+          </div>
+        </dl>
+      </div>
+
+      {# Illustrative product preview: static sample content, not live data #}
+      <figure class="relative" aria-labelledby="preview-caption">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/30">
+          <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60">
+            <div class="flex gap-1.5" aria-hidden="true">
+              <span class="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+            </div>
+            <span class="font-mono text-xs text-slate-500 dark:text-slate-500">/accounts/profile/</span>
+            <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">Sample</span>
+          </div>
+
+          <div class="grid sm:grid-cols-[11rem_1fr]">
+            <div class="hidden border-r border-slate-200 p-3 text-sm sm:block dark:border-slate-800" aria-hidden="true">
+              <p class="rounded-md bg-emerald-50 px-3 py-2 font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Profile</p>
+              <p class="mt-1 rounded-md px-3 py-2 text-slate-600 dark:text-slate-400">Privacy</p>
+              <p class="mt-1 rounded-md px-3 py-2 text-slate-600 dark:text-slate-400">Email</p>
+              <p class="mt-1 rounded-md px-3 py-2 text-slate-600 dark:text-slate-400">Password</p>
+              <p class="mt-1 rounded-md px-3 py-2 text-slate-600 dark:text-slate-400">Deactivate</p>
+            </div>
+
+            <div class="space-y-5 p-5">
+              <div class="flex items-center gap-4">
+                <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-lg font-bold text-white" aria-hidden="true">JD</div>
+                <div class="min-w-0">
+                  <p class="truncate font-semibold text-slate-900 dark:text-white">Jane Doe</p>
+                  <p class="truncate font-mono text-xs text-slate-500">@jane_doe · jane@example.com</p>
+                </div>
+                <span class="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
+                  Email verified
+                </span>
+              </div>
+
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Field visibility</p>
+                <ul class="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
+                  <li class="flex items-center justify-between px-3 py-2"><span>Name</span><span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">Public</span></li>
+                  <li class="flex items-center justify-between px-3 py-2"><span>Email</span><span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">Hidden</span></li>
+                  <li class="flex items-center justify-between px-3 py-2"><span>Phone</span><span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">Hidden</span></li>
+                  <li class="flex items-center justify-between px-3 py-2"><span>Bio</span><span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">Logged-in users</span></li>
+                  <li class="flex items-center justify-between px-3 py-2"><span>Avatar</span><span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">Public</span></li>
+                </ul>
+              </div>
+
+              <div class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5 text-sm dark:border-slate-800">
+                <span class="flex items-center gap-2">
+                  <svg class="h-4 w-4 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+                  Password and recovery
+                </span>
+                <span class="text-xs text-slate-500">Change · Reset by email</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption id="preview-caption" class="mt-3 text-center text-xs text-slate-500">
+          Illustrative preview with sample values. It is not live application data.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  {# ───────────── B. Features ───────────── #}
+  <section id="features" class="scroll-mt-16 border-b border-slate-200 dark:border-slate-800">
+    <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+      <div class="max-w-2xl">
+        <p class="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Capabilities</p>
+        <h2 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">What the app covers</h2>
+        <p class="mt-4 text-slate-600 dark:text-slate-400">Six areas of account management, implemented once so each new Django project does not have to rebuild them.</p>
+      </div>
+
+      <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          </div>
+          <h3 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white">Authentication</h3>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>Registration with username, email and password validation</li>
+            <li>Login by username or email, case-insensitive</li>
+            <li>POST-only logout</li>
+            <li>Safe redirect handling</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          </div>
+          <h3 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white">Email verification</h3>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>Expiring, single-use tokens stored as hashes</li>
+            <li>Resend flow with a cooldown</li>
+            <li>Handling for unverified accounts</li>
+            <li>HTML and plain-text email templates</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M16 7l3 3M14 9l2 2"/></svg>
+          </div>
+          <h3 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white">Password management</h3>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>Password change for signed-in users</li>
+            <li>Email-based password recovery</li>
+            <li>Session-epoch-aware token invalidation</li>
+            <li>Responses that do not reveal whether an email exists</li>
+          </ul>
+          {% if not user.is_authenticated %}
+            <a href="{% url 'accounts:password_reset' %}" class="mt-4 inline-block rounded text-sm font-medium text-emerald-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-emerald-400">Try password recovery &rarr;</a>
+          {% endif %}
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+          </div>
+          <h3 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white">Profile management</h3>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>Profile information and public profiles</li>
+            <li>Avatar validation, resizing and cleanup</li>
+            <li>Account settings</li>
+          </ul>
+          {% if user.is_authenticated %}
+            <a href="{% url 'accounts:settings' %}" class="mt-4 inline-block rounded text-sm font-medium text-emerald-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-emerald-400">Open settings &rarr;</a>
+          {% endif %}
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <h3 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white">Privacy controls</h3>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>Per-field visibility for name, email, phone, bio and avatar</li>
+            <li>Public, authenticated-only or hidden</li>
+            <li>Optional integration with an external blocking system</li>
+          </ul>
+          {% if user.is_authenticated %}
+            <a href="{% url 'accounts:privacy' %}" class="mt-4 inline-block rounded text-sm font-medium text-emerald-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-emerald-400">Privacy settings &rarr;</a>
+          {% endif %}
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/40">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 11-3-6.7L21 8M21 3v5h-5"/></svg>
+          </div>
+          <h3 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white">Account lifecycle</h3>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>Deactivation and reactivation</li>
+            <li>Immediate or delayed deletion</li>
+            <li>Cleanup of deleted accounts and avatar files</li>
+            <li>Protection for the last active superuser</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {# ───────────── C. Security and reliability ───────────── #}
+  <section id="security" class="scroll-mt-16 border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40">
+    <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+      <div class="grid gap-12 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Security and reliability</p>
+          <h2 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">Safeguards built into the flows that matter</h2>
+          <p class="mt-4 text-slate-600 dark:text-slate-400">
+            These are implementation details, not certifications. The app has not been independently audited,
+            and it does not include two-factor authentication or social login.
+          </p>
+
+          <div class="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+            <p class="font-semibold">Backend caveat</p>
+            <p class="mt-1">Row locking applies where the code uses it and depends on the database. PostgreSQL honours it. Other backends may give weaker guarantees, so test on the database you deploy.</p>
+          </div>
+        </div>
+
+        <dl class="grid gap-4 sm:grid-cols-2">
+          <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <dt class="font-semibold text-slate-900 dark:text-white">Cache-based rate limiting</dt>
+            <dd class="mt-2 text-sm text-slate-600 dark:text-slate-400">Applied to sensitive flows. Limits live in your configured Django cache, so a shared cache is needed across multiple processes.</dd>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <dt class="font-semibold text-slate-900 dark:text-white">Session epoch invalidation</dt>
+            <dd class="mt-2 text-sm text-slate-600 dark:text-slate-400">An epoch counter on the account lets security-relevant changes invalidate existing sessions and outstanding tokens.</dd>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <dt class="font-semibold text-slate-900 dark:text-white">Database uniqueness constraints</dt>
+            <dd class="mt-2 text-sm text-slate-600 dark:text-slate-400">Identifier uniqueness is enforced by the database, not only by form validation. A management command checks for identifier collisions.</dd>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <dt class="font-semibold text-slate-900 dark:text-white">Transaction-aware operations</dt>
+            <dd class="mt-2 text-sm text-slate-600 dark:text-slate-400">Account operations run in transactions, and signals are emitted only after a successful commit.</dd>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <dt class="font-semibold text-slate-900 dark:text-white">PostgreSQL row locking</dt>
+            <dd class="mt-2 text-sm text-slate-600 dark:text-slate-400">Used in the places where the implementation takes it, to serialise concurrent changes to the same account.</dd>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <dt class="font-semibold text-slate-900 dark:text-white">Enumeration-resistant responses</dt>
+            <dd class="mt-2 text-sm text-slate-600 dark:text-slate-400">Account recovery and email change respond the same way whether or not an address is registered.</dd>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <dt class="font-semibold text-slate-900 dark:text-white">Django system checks</dt>
+            <dd class="mt-2 text-sm text-slate-600 dark:text-slate-400">Configuration problems surface through <code class="font-mono text-xs">manage.py check</code> rather than at runtime.</dd>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <dt class="font-semibold text-slate-900 dark:text-white">Centralised privilege changes</dt>
+            <dd class="mt-2 text-sm text-slate-600 dark:text-slate-400">Role and privilege changes go through the service layer, including protection for the last active superuser.</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  {# ───────────── D. Architecture ───────────── #}
+  <section id="architecture" class="scroll-mt-16 border-b border-slate-200 dark:border-slate-800">
+    <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+      <div class="max-w-2xl">
+        <p class="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Architecture</p>
+        <h2 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">Thin views, a service layer, explicit integration points</h2>
+        <p class="mt-4 text-slate-600 dark:text-slate-400">HTTP flows call into <code class="font-mono text-sm">services.py</code>, which owns the business operations. Signals fire after commit so your project can react without patching the app.</p>
+      </div>
+
+      <div class="mt-12 rounded-2xl border border-slate-200 bg-white p-4 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
+        <div class="grid gap-4 lg:grid-cols-[1fr_auto_1.2fr_auto_1fr] lg:items-stretch">
+
+          {# Inputs #}
+          <div class="space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">HTTP and tooling</p>
+            <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <p class="font-medium text-slate-900 dark:text-white">Views</p>
+              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">HTTP flows under <code class="font-mono">accounts/</code></p>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <p class="font-medium text-slate-900 dark:text-white">Forms</p>
+              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Input validation</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <p class="font-medium text-slate-900 dark:text-white">Admin</p>
+              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Django admin integration</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <p class="font-medium text-slate-900 dark:text-white">Management commands</p>
+              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Operational tasks from the CLI</p>
+            </div>
+          </div>
+
+          <div class="hidden items-center text-emerald-500 lg:flex" aria-hidden="true">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </div>
+
+          {# Core #}
+          <div class="flex flex-col justify-center rounded-xl border-2 border-emerald-500/60 bg-emerald-50/60 p-5 dark:bg-emerald-500/5">
+            <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Core</p>
+            <p class="mt-1 font-mono text-lg font-semibold text-slate-900 dark:text-white">services.py</p>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Business operations: sign-up, verification, deactivation, deletion, role changes. Wrapped in transactions.</p>
+            <div class="mt-4 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+              <p class="font-medium text-slate-900 dark:text-white">Models and account data</p>
+              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Custom user model, profile and privacy data, verification tokens</p>
+            </div>
+          </div>
+
+          <div class="hidden items-center text-emerald-500 lg:flex" aria-hidden="true">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </div>
+
+          {# Outputs #}
+          <div class="space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your project</p>
+            <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <p class="font-medium text-slate-900 dark:text-white">Signals</p>
+              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Emitted after successful commits</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <p class="font-medium text-slate-900 dark:text-white">ACCOUNTS_* settings</p>
+              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Behaviour configured from settings</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <p class="font-medium text-slate-900 dark:text-white">Integration surface</p>
+              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400"><code class="font-mono">AUTH_USER_MODEL</code>, URL include, signal receivers</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ───────────── E. Account lifecycle ───────────── #}
+  <section id="lifecycle" class="scroll-mt-16 border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40">
+    <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+      <div class="max-w-2xl">
+        <p class="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Account lifecycle</p>
+        <h2 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">From registration to cleanup</h2>
+        <p class="mt-4 text-slate-600 dark:text-slate-400">Deactivation is reversible. Deletion is a separate path that ends in permanent removal.</p>
+      </div>
+
+      <ol class="mt-12 grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+        <li class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <p class="font-mono text-xs text-emerald-600 dark:text-emerald-400">01</p>
+          <h3 class="mt-1 font-semibold text-slate-900 dark:text-white">Registration</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Sign-up emits <code class="font-mono text-xs">user_signed_up</code>.</p>
+        </li>
+        <li class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <p class="font-mono text-xs text-emerald-600 dark:text-emerald-400">02</p>
+          <h3 class="mt-1 font-semibold text-slate-900 dark:text-white">Email verification</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">A single-use token confirms the address and emits <code class="font-mono text-xs">email_verified</code>.</p>
+        </li>
+        <li class="rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-500/40 dark:bg-emerald-500/10">
+          <p class="font-mono text-xs text-emerald-700 dark:text-emerald-300">03</p>
+          <h3 class="mt-1 font-semibold text-slate-900 dark:text-white">Active account</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Profile, privacy and settings are available.</p>
+        </li>
+        <li class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <p class="font-mono text-xs text-emerald-600 dark:text-emerald-400">04a &middot; reversible</p>
+          <h3 class="mt-1 font-semibold text-slate-900 dark:text-white">Deactivation</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Emits <code class="font-mono text-xs">account_deactivated</code>. Reactivation emits <code class="font-mono text-xs">account_reactivated</code>.</p>
+          <a href="{% url 'accounts:reactivate' %}" class="mt-3 inline-block rounded text-sm font-medium text-emerald-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-emerald-400">Reactivation page &rarr;</a>
+        </li>
+        <li class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <p class="font-mono text-xs text-rose-600 dark:text-rose-400">04b &middot; deletion</p>
+          <h3 class="mt-1 font-semibold text-slate-900 dark:text-white">Deletion</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Immediate or delayed. Request emits <code class="font-mono text-xs">account_deletion_requested</code>; removal emits <code class="font-mono text-xs">account_deleted</code>. Delayed deletions are cleaned up by <code class="font-mono text-xs">purge_deleted_accounts</code>.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  {# ───────────── F. Developer integration ───────────── #}
+  <section id="integration" class="scroll-mt-16 border-b border-slate-200 dark:border-slate-800">
+    <div class="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Developer integration</p>
+        <h2 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">Three touch points in your project</h2>
+        <ol class="mt-6 space-y-4 text-slate-600 dark:text-slate-400">
+          <li class="flex gap-3"><span class="font-mono text-emerald-600 dark:text-emerald-400">1.</span><span>Add the app and point <code class="font-mono text-sm">AUTH_USER_MODEL</code> at its user model <em>before the first migration</em>.</span></li>
+          <li class="flex gap-3"><span class="font-mono text-emerald-600 dark:text-emerald-400">2.</span><span>Include <code class="font-mono text-sm">accounts.urls</code>. It declares the <code class="font-mono text-sm">accounts</code> namespace.</span></li>
+          <li class="flex gap-3"><span class="font-mono text-emerald-600 dark:text-emerald-400">3.</span><span>Connect receivers to the signals you care about.</span></li>
+        </ol>
+        <p class="mt-6 text-sm text-slate-500">
+          Check module paths, the user model name and the available <code class="font-mono text-xs">ACCOUNTS_*</code> settings against your copy of the app. The snippet shows the shape of the integration.
+        </p>
+      </div>
+
+      <div class="min-w-0 space-y-4">
+        <figure class="overflow-hidden rounded-xl border border-slate-200 bg-slate-950 dark:border-slate-800">
+          <figcaption class="border-b border-slate-800 px-4 py-2 font-mono text-xs text-slate-400">settings.py</figcaption>
+          <pre class="overflow-x-auto p-4 text-sm leading-relaxed text-slate-200"><code>INSTALLED_APPS = [
+    # ...
+    "accounts",
+]
+
+AUTH_USER_MODEL = "accounts.User"  # set before the first migrate</code></pre>
+        </figure>
+
+        <figure class="overflow-hidden rounded-xl border border-slate-200 bg-slate-950 dark:border-slate-800">
+          <figcaption class="border-b border-slate-800 px-4 py-2 font-mono text-xs text-slate-400">urls.py</figcaption>
+          <pre class="overflow-x-auto p-4 text-sm leading-relaxed text-slate-200"><code>urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("accounts/", include("accounts.urls")),
+]</code></pre>
+        </figure>
+
+        <figure class="overflow-hidden rounded-xl border border-slate-200 bg-slate-950 dark:border-slate-800">
+          <figcaption class="border-b border-slate-800 px-4 py-2 font-mono text-xs text-slate-400">receivers.py</figcaption>
+          <pre class="overflow-x-auto p-4 text-sm leading-relaxed text-slate-200"><code>from django.dispatch import receiver
+from accounts.signals import user_signed_up
+
+@receiver(user_signed_up)
+def on_signed_up(sender, **kwargs):
+    ...  # e.g. create your own related records</code></pre>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  {# ───────────── G. Commands and signals ───────────── #}
+  <section id="operations" class="scroll-mt-16 border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40">
+    <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+      <div class="grid gap-12 lg:grid-cols-2 lg:gap-16">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Management commands</p>
+          <h2 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">Operational tooling</h2>
+          <dl class="mt-6 space-y-3">
+            <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+              <dt class="font-mono text-sm font-semibold text-slate-900 dark:text-white">set_role</dt>
+              <dd class="mt-1 text-sm text-slate-600 dark:text-slate-400">Assign a role to an account from the command line.</dd>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+              <dt class="font-mono text-sm font-semibold text-slate-900 dark:text-white">purge_deleted_accounts</dt>
+              <dd class="mt-1 text-sm text-slate-600 dark:text-slate-400">Remove accounts whose deletion is due, including their avatar files.</dd>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+              <dt class="font-mono text-sm font-semibold text-slate-900 dark:text-white">check_identifier_collisions</dt>
+              <dd class="mt-1 text-sm text-slate-600 dark:text-slate-400">Report accounts whose identifiers would collide under case-insensitive matching.</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Signals</p>
+          <h2 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">Hooks for your project</h2>
+          <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+            <li class="rounded-xl border border-slate-200 bg-white p-4 font-mono text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">user_signed_up</li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4 font-mono text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">email_verified</li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4 font-mono text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">account_deactivated</li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4 font-mono text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">account_reactivated</li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4 font-mono text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">account_deletion_requested</li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4 font-mono text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">account_deleted</li>
+          </ul>
+          <p class="mt-4 text-sm text-slate-500">Signals are emitted after the database transaction commits successfully.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ───────────── H. Final CTA ───────────── #}
+  <section class="px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+    <div class="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-slate-900 px-6 py-16 text-center sm:px-12 dark:border dark:border-slate-800 dark:bg-slate-900">
+      <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div class="absolute -top-24 left-1/2 h-64 w-[36rem] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-3xl"></div>
+      </div>
+      <div class="relative">
+        <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          {% if user.is_authenticated %}Your account, in one place{% else %}See the flows for yourself{% endif %}
+        </h2>
+        <p class="mx-auto mt-4 max-w-xl text-slate-300">
+          {% if user.is_authenticated %}
+            Review your profile, privacy and account settings.
+          {% else %}
+            Register, verify your email, then explore profile, privacy and account settings.
+          {% endif %}
+        </p>
+        <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {% if user.is_authenticated %}
+            <a href="{% url 'accounts:profile' %}"
+               class="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">
+              Go to profile
+            </a>
+            <a href="{% url 'accounts:settings' %}"
+               class="inline-flex items-center justify-center rounded-lg border border-slate-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">
+              Settings
+            </a>
+          {% else %}
+            <a href="{% url 'accounts:signup' %}"
+               class="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">
+              Create an account
+            </a>
+            <a href="{% url 'accounts:login' %}"
+               class="inline-flex items-center justify-center rounded-lg border border-slate-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">
+              Sign in
+            </a>
+            <a href="{% url 'accounts:password_reset' %}"
+               class="rounded px-3 py-3 text-sm font-medium text-slate-300 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+              Forgot password?
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
 </div>
 {% endblock %}
